@@ -37,7 +37,7 @@ DECLARE KPI_4        NUMERIC;  -- reserved for future use
 SET rep_from    = '2025-07-01';
 SET rep_to      = '2025-07-31';
 SET Test_Market = 'your-market';   -- e.g. 'US'
-SET Test_Brand  = 'your-brand';    -- e.g. 'Land Rover'
+SET Test_Brand  = 'your-brand';    -- e.g. 'Coca Cola'
 SET KPI_1 = 15;   -- update to your form submit interaction ID
 SET KPI_2 = 67;   -- update to your form arrival interaction ID
 
