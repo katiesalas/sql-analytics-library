@@ -1,16 +1,16 @@
 -- ============================================================
--- MLPX Funnel by Nameplate and Channel
+-- Ecommerce Funnel by Product and Channel
 -- ============================================================
--- Measures the sequential MLPX funnel:
---   MLPX Entry → Config Start → Config Complete
+-- Measures the sequential Ecommerce funnel:
+--   Ecommerce Entry → Interacton → Config Complete
 --
--- MLPX Entry is the CTA that opens the MLPX experience.
+-- Ecommerce Entry is the CTA that opens the Ecommerce experience.
 -- Config steps are measured only for those same sessions
 -- (LEFT JOIN), so conversion rates reflect onward behaviour
--- from MLPX entry.
+-- from Ecommerce entry.
 --
 -- Counting: session-based throughout for funnel consistency.
---   Note: MLPX Entry official dashboard metric is visitor-based.
+--   Note: Ecommerce Entry official dashboard metric is visitor-based.
 --   This query uses sessions to keep the funnel comparable across
 --   all three steps. To match dashboard numbers exactly,
 --   swap session_id → visitor_id in the final COUNTs.
@@ -20,7 +20,7 @@
 --   Sum by medium_type to get Paid/Not Paid; individual channels
 --   should sum to match.
 --
--- Output: one row per nameplate × channel with session counts
+-- Output: one row per product × channel with session counts
 --         and conversion rates at each funnel step.
 -- ============================================================
 -- To run: update rep_from, rep_to, brand, and interaction IDs.
@@ -33,13 +33,13 @@ SET rep_from = '2026-01-01';
 SET rep_to   = '2026-03-31';
 
 -- ============================================================
--- STEP 1: MLPX Entry sessions with channel
+-- STEP 1: Ecommerce Entry sessions with channel
 -- ============================================================
 WITH fm AS (
   SELECT DISTINCT
     e.session_id,
     e.visit_start_date,
-    e.nameplate_code,
+    e.product_code,
     CASE
       WHEN s.channel_grouping IN ('Paid Display & Video', 'Display')
         THEN 'Paid Display, Video & Digital Audio'
@@ -59,26 +59,26 @@ WITH fm AS (
       ) THEN 'Paid'
       ELSE 'Not Paid'
     END AS medium_type
-  FROM `your-project.your_dataset.GA4_ecomm_hit_interaction_nameplate` AS e
+  FROM `your-project.your_dataset.GA4_ecomm_hit_interaction_product` AS e
   JOIN `your-project.your_dataset.GA4_session` AS s
     ON  e.session_id       = s.session_id
     AND e.visit_start_date = s.visit_start_date
   WHERE e.visit_start_date BETWEEN rep_from AND rep_to
-    AND e.interaction_id = 227   -- MLPX Entry interaction ID
+    AND e.interaction_id = 227   -- Ecommerce Entry interaction ID
 ),
 
 -- ============================================================
--- STEP 2: Config Start
+-- STEP 2: Interacton
 -- ============================================================
 cs AS (
   SELECT DISTINCT
     sin.session_id,
     sin.visit_start_date,
-    sin.nameplate_code
-  FROM `your-project.your_dataset.GA4_session_interaction_nameplate` AS sin
+    sin.product_code
+  FROM `your-project.your_dataset.GA4_session_interaction_product` AS sin
   WHERE sin.visit_start_date BETWEEN rep_from AND rep_to
-    AND sin.brand          = 'your-brand'   -- e.g. 'Land Rover'
-    AND sin.interaction_id = 5              -- Config Start
+    AND sin.brand          = 'your-brand'   -- e.g. 'Product'
+    AND sin.interaction_id = 5              -- Interacton
 ),
 
 -- ============================================================
@@ -88,8 +88,8 @@ cc AS (
   SELECT DISTINCT
     sin.session_id,
     sin.visit_start_date,
-    sin.nameplate_code
-  FROM `your-project.your_dataset.GA4_session_interaction_nameplate` AS sin
+    sin.product_code
+  FROM `your-project.your_dataset.GA4_session_interaction_product` AS sin
   WHERE sin.visit_start_date BETWEEN rep_from AND rep_to
     AND sin.brand          = 'your-brand'
     AND sin.interaction_id = 11             -- Config Complete
@@ -97,16 +97,16 @@ cc AS (
 
 -- ============================================================
 -- FINAL: Funnel counts and conversion rates
---        by nameplate × medium_type × channel_grouping
+--        by product × medium_type × channel_grouping
 -- ============================================================
 SELECT
-  fm.nameplate_code,
-  REGEXP_REPLACE(ln.nameplate_desc, r' \(.*\)', '') AS nameplate_desc,
+  fm.product_code,
+  REGEXP_REPLACE(ln.product_desc, r' \(.*\)', '') AS product_desc,
   fm.medium_type,
   fm.channel_grouping,
 
   -- Funnel step counts
-  COUNT(DISTINCT fm.session_id)  AS mlpx_entry_sessions,
+  COUNT(DISTINCT fm.session_id)  AS Ecommerce_entry_sessions,
   COUNT(DISTINCT cs.session_id)  AS config_start_sessions,
   COUNT(DISTINCT cc.session_id)  AS config_complete_sessions,
 
@@ -119,13 +119,13 @@ FROM fm
 LEFT JOIN cs
   ON  fm.session_id       = cs.session_id
   AND fm.visit_start_date = cs.visit_start_date
-  AND fm.nameplate_code   = cs.nameplate_code
+  AND fm.product_code   = cs.product_code
 LEFT JOIN cc
   ON  fm.session_id       = cc.session_id
   AND fm.visit_start_date = cc.visit_start_date
-  AND fm.nameplate_code   = cc.nameplate_code
-JOIN `your-project.your_dataset.GA4_lookup_nameplate` AS ln
-  ON fm.nameplate_code = ln.nameplate_code
+  AND fm.product_code   = cc.product_code
+JOIN `your-project.your_dataset.GA4_lookup_product` AS ln
+  ON fm.product_code = ln.product_code
 GROUP BY 1, 2, 3, 4
-ORDER BY nameplate_desc, medium_type, mlpx_entry_sessions DESC
+ORDER BY product_desc, medium_type, Ecommerce_entry_sessions DESC
 ;
