@@ -1,9 +1,8 @@
 -- ============================================================
--- REGULAR REPORT: CEP Paid Social Campaign Performance
+-- REGULAR REPORT: DX_Page Paid Social Campaign Performance
 -- ============================================================
--- Filters to Paid Social sessions that landed on a Client
--- Education page, then tracks onward behaviour by campaign.
---
+-- Filters to Paid Social sessions that landed on a DX page, then tracks onward behaviour by campaign.
+--paid_social_campaigns_report.sql
 -- Campaign enrichment uses full 4-path taxonomy lookup:
 --   1. campaign_key match
 --   2. SA360 campaign ID
@@ -13,7 +12,7 @@
 -- focus_campaigns: leave as empty array [] to return all
 -- campaigns, or populate to filter to specific ones.
 -- ============================================================
--- To run: update report_week_end and CEP page_path LIKE filter.
+-- To run: update report_week_end and DX_Page page_path LIKE filter.
 -- ============================================================
 
 DECLARE report_week_end   DATE DEFAULT '2026-04-05';
@@ -139,7 +138,7 @@ CLIENT_EDU_LANDINGS AS (
   WHERE CE.visit_start_date BETWEEN report_week_start AND report_week_end
     AND CE.market_code            = 'your-market'   -- e.g. 'US'
     AND CE.channel_grouping_final = 'Paid Social'
-    AND H.page_path LIKE '%your-cep-url-pattern%'   -- e.g. '%online-reservations.html%'
+    AND H.page_path LIKE '%your-DX_Page-url-pattern%'   -- e.g. '%online-reservations.html%'
     AND (ARRAY_LENGTH(focus_campaigns) = 0
          OR CE.campaign_final IN UNNEST(focus_campaigns))
   GROUP BY 1, 2, 3
@@ -148,7 +147,7 @@ CLIENT_EDU_LANDINGS AS (
 SELECT
   L.week_id_date,
   L.campaign_final,
-  COUNT(DISTINCT L.session_id) AS `Client Education Page Views`,
+  COUNT(DISTINCT L.session_id) AS `DX Page Views`,
   COUNT(DISTINCT CASE WHEN I.engagement_flag = 1 THEN L.session_id END)                  AS `Engaged Sessions`,
   COUNT(DISTINCT CASE WHEN H2.hit_datetime > L.ce_min_hit_datetime AND HIN_cfg.interaction_id = 5  THEN L.session_id END) AS `Config Starts`,
   COUNT(DISTINCT CASE WHEN H2.hit_datetime > L.ce_min_hit_datetime AND HIN_cfg.interaction_id = 11 THEN L.session_id END) AS `Config Completes`,
