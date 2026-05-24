@@ -1,15 +1,15 @@
 -- ============================================================
--- REGULAR REPORT: MLPX Entry Daily Query
+-- REGULAR REPORT: Ecommerce Entry Daily Query
 -- ============================================================
--- Tracks CTA clicks and onward reservations for MLPX entry CTAs.
+-- Tracks CTA clicks and onward reservations for Ecommerce entry CTAs.
 -- Reports daily history from history_start through report_week_end.
 --
 -- CTAs tracked by event_label pattern (update LIKE filters for
 -- your market's CTA label naming convention):
---   Find Matches        — cta--primary (Summary Page)
---   Find Matches        — cta--secondary (Sticky)
---   View Inventory Matches — cta--primary
---   View Inventory Matches — cta--secondary
+--   Key CTA        — cta--primary (Summary Page)
+--   Key CTA        — cta--secondary (Sticky)
+--   Key CTA_2 — cta--primary
+--   Key CTA_2 — cta--secondary
 --
 -- Reservations are visitor-based: did the visitor who clicked
 -- go on to reserve in any subsequent session?
@@ -30,8 +30,8 @@ fm_clicks AS (
     SN.visitor_id,
     h.visit_start_date,
     CASE
-      WHEN h.event_label LIKE 'FIND MATCHES%'           THEN 'Find Matches'
-      WHEN h.event_label LIKE 'VIEW INVENTORY MATCHES%' THEN 'View Inventory Matches'
+      WHEN h.event_label LIKE 'Key CTA%'           THEN 'Key CTA'
+      WHEN h.event_label LIKE 'Key CTA_2%' THEN 'Key CTA_2'
       -- Update LIKE patterns to match your market's CTA event labels
     END AS cta_type,
     CASE
@@ -91,27 +91,27 @@ SELECT
   COUNT(DISTINCT CASE WHEN CI.interaction_id = 5  THEN SN.session_id END)       AS config_starts,
   COUNT(DISTINCT CASE WHEN CI.interaction_id = 11 THEN SN.session_id END)       AS config_completes,
 
-  COUNT(DISTINCT CASE WHEN FM.cta_type = 'Find Matches'
+  COUNT(DISTINCT CASE WHEN FM.cta_type = 'Key CTA'
     AND FM.cta_position = 'Primary' THEN FM.session_id END)                     AS fm_primary_clicks,
-  COUNT(DISTINCT CASE WHEN FM.cta_type = 'Find Matches'
+  COUNT(DISTINCT CASE WHEN FM.cta_type = 'Key CTA'
     AND FM.cta_position = 'Primary'
     AND RES.visitor_id IS NOT NULL THEN FM.visitor_id END)                      AS fm_primary_reservations,
 
-  COUNT(DISTINCT CASE WHEN FM.cta_type = 'Find Matches'
+  COUNT(DISTINCT CASE WHEN FM.cta_type = 'Key CTA'
     AND FM.cta_position = 'Secondary' THEN FM.session_id END)                   AS fm_secondary_clicks,
-  COUNT(DISTINCT CASE WHEN FM.cta_type = 'Find Matches'
+  COUNT(DISTINCT CASE WHEN FM.cta_type = 'Key CTA'
     AND FM.cta_position = 'Secondary'
     AND RES.visitor_id IS NOT NULL THEN FM.visitor_id END)                      AS fm_secondary_reservations,
 
-  COUNT(DISTINCT CASE WHEN FM.cta_type = 'View Inventory Matches'
+  COUNT(DISTINCT CASE WHEN FM.cta_type = 'Key CTA_2'
     AND FM.cta_position = 'Primary' THEN FM.session_id END)                     AS vim_primary_clicks,
-  COUNT(DISTINCT CASE WHEN FM.cta_type = 'View Inventory Matches'
+  COUNT(DISTINCT CASE WHEN FM.cta_type = 'Key CTA_2'
     AND FM.cta_position = 'Primary'
     AND RES.visitor_id IS NOT NULL THEN FM.visitor_id END)                      AS vim_primary_reservations,
 
-  COUNT(DISTINCT CASE WHEN FM.cta_type = 'View Inventory Matches'
+  COUNT(DISTINCT CASE WHEN FM.cta_type = 'Key CTA_2'
     AND FM.cta_position = 'Secondary' THEN FM.session_id END)                   AS vim_secondary_clicks,
-  COUNT(DISTINCT CASE WHEN FM.cta_type = 'View Inventory Matches'
+  COUNT(DISTINCT CASE WHEN FM.cta_type = 'Key CTA_2'
     AND FM.cta_position = 'Secondary'
     AND RES.visitor_id IS NOT NULL THEN FM.visitor_id END)                      AS vim_secondary_reservations
 
